@@ -20,6 +20,9 @@
 // internal & private view & pure functions
 // external & public view & pure functions
 
+error VotingEnded();
+error VotingEndingTimeHasntReached();
+
 import {IERC20} from "./interface/IERC2o.sol";
 
 contract Governance {
@@ -62,13 +65,17 @@ contract Governance {
     Candidate[] internal allCandidates;
     Election[] internal allElection;
 
+    ///////// EVENTS /////////////////////////
+    event ElectionStatusChanged(string, uint256, uint256, bool);
+    event CandidateAdded(uint256, uint256, string);
+
     modifier onlyOwner() {
         require(msg.sender == i_owner, "You can not call the function");
         _;
     }
 
     constructor(address _owner) {
-        i_owner = _owner;
+        i_owner = _owner; // or can make msg.sender
     }
 
     function mint(string memory year, uint256 electionId) public view {
@@ -81,6 +88,7 @@ contract Governance {
         ); // already minted try again for another election
 
         // MINT FUNCTION
+        // mint the user one token only
     }
 
     function addVoter() public {
@@ -89,7 +97,7 @@ contract Governance {
             if (msg.sender == voters[i]) {
                 require(false, "Already Registered Wallet as a voter");
             }
-        } // might be inefficient, might change to set later on
+        } // might be inefficient, may change to set later on
         voters.push(msg.sender);
     }
 
@@ -98,13 +106,27 @@ contract Governance {
         uint256 electionId,
         address tokenAddress,
         uint32 value,
+        uint256 startDate,
         uint256 endDate,
         uint256 candidateId
     ) public {
         // check if vote is over
-        require(block.timestamp < endDate, "Election ALready Ended");
-
         Election storage election = elections[year][electionId];
+
+        // if the time has passed, the next person that tries to vote changes ongoing to false
+        // Check if the election has ended. If so, mark it as not ongoing and revert the transaction.
+        require(!election.ongoing, "Election Ender");
+
+        if (block.timestamp > endDate) {
+            election.ongoing = false;
+            revert VotingEnded();
+        }
+        // Check if the current timestamp is within the election period.
+        if (block.timestamp > startDate && block.timestamp < endDate) {
+            // If within the election period, mark the election as ongoing.
+            election.ongoing = true;
+        }
+
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), value);
 
         // make state change
@@ -175,30 +197,74 @@ contract Governance {
         );
     }
 
+    // checked  👍
     function addCandidate(
         uint256 _electionId,
         uint256 candidateId,
-        string memory _name,
-        string memory _imageURI,
-        string memory _position,
-        string memory _year,
-        string memory _about
+        string memory _year
     ) private {
-        // get the election
+        // Get the reference to the election by using the election ID and year.
         Election storage election = elections[_year][_electionId];
-        Candidate[] storage candidate = election.candidates;
 
-        candidate.push(
+        // Get the storage reference to the array of candidates for the specified election.
+        Candidate[] storage candidateStruct = election.candidates;
+
+        // Retrieve the candidate details from the global candidates mapping.
+        Candidate storage candidate = candidates[_year][candidateId];
+
+        // Add the candidate to the array of candidates for the specified election.
+        candidateStruct.push(
             Candidate({
-                name: _name,
-                imageURI: _imageURI,
-                position: _position,
-                about: _about,
+                name: candidate.name,
+                imageURI: candidate.imageURI,
+                position: candidate.position,
+                about: candidate.about,
                 noOfVoters: 0,
                 votersAddresses: new address[](0),
                 ID: candidateId
             })
         );
+
+        // Emit an event to log the addition of the candidate to the election.
+        emit CandidateAdded(_electionId, candidateId, _year);
+    }
+
+    // still thinking if to make this only owner can call this
+    // or let voters end it
+    function changeElectionStatusToStarted(
+        string memory year,
+        uint256 electionId,
+        uint256 endDate,
+        bool status
+    ) external {
+        // Check if the election exists
+        require(
+            elections[year][electionId].ID == electionId,
+            "Election does not exist"
+        );
+        Election storage election = elections[year][electionId];
+
+        // Ensure the election status is different from the requested status.
+        require(election.ongoing != status, "Already in this status");
+
+        if (status == false) {
+            // If the status is false, check if the current timestamp is before the specified end date.
+            // If the end date hasn't been reached, revert the transaction.
+            require(
+                block.timestamp > endDate,
+                "Voting ending time hasn't been reached"
+            );
+        } else {
+            // If the status is true, check if the current timestamp is after the specified end date.
+            // If the end date has been reached, revert the transaction.
+            require(block.timestamp < endDate, "Voting has already ended");
+        }
+
+        // Update the election status to the requested status.
+        election.ongoing = status;
+
+        // Emit an event to log the change in election status.
+        emit ElectionStatusChanged(year, electionId, endDate, status);
     }
 
     ////////////// GETTERS FUNCTIONS (VIEW and PURE) ///////////////////////
