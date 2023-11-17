@@ -20,10 +20,15 @@
 // internal & private view & pure functions
 // external & public view & pure functions
 
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+pragma solidity ^0.8.18;
+
 error VotingEnded();
 error VotingEndingTimeHasntReached();
 
 import {IERC20} from "./interface/IERC2o.sol";
+import {IGovernanceToken} from "./interface/IGovernanceToken.sol";
 
 contract Governance {
     //////////// STRUCT ///////////////
@@ -48,9 +53,16 @@ contract Governance {
         uint256 ID;
     }
 
+    struct Voter {
+        address voterAddr;
+        bool verified;
+    }
+
     //////////// MAPPINGS ///////////////
     mapping(string year => mapping(uint256 electionId => Election)) elections;
     mapping(string year => mapping(uint256 candidateId => Candidate)) candidates; // for a particular year
+    mapping(address => Voter) voters; // for a particular year
+
     // Mapping structure to track if a user has minted a token for a specific election.
     // Keys:
     // - Outer mapping: user's Ethereum address (voterAddr).
@@ -61,7 +73,7 @@ contract Governance {
 
     //////////// STATE VARIABLE ///////////////
     address immutable i_owner;
-    address[] internal voters;
+    Voter[] internal allVoters;
     Candidate[] internal allCandidates;
     Election[] internal allElection;
 
@@ -78,27 +90,42 @@ contract Governance {
         i_owner = _owner; // or can make msg.sender
     }
 
-    function mint(string memory year, uint256 electionId) public view {
+    function mint(
+        string memory year,
+        uint256 _electionId,
+        address _tokenAddr
+    ) public {
         // when a user call this function (DO THIS)
         // check if the user has minted for the election he is trying to mint for
         // mint the user the token
         require(
-            !minted[msg.sender][year][electionId],
+            !minted[msg.sender][year][_electionId],
             "Already minted for this election"
         ); // already minted try again for another election
 
         // MINT FUNCTION
         // mint the user one token only
+        IGovernanceToken(_tokenAddr).mint(year, _electionId, address(this));
     }
 
     function addVoter() public {
         // Check if voter already exist
-        for (uint256 i = 0; i < voters.length; i++) {
-            if (msg.sender == voters[i]) {
-                require(false, "Already Registered Wallet as a voter");
-            }
-        } // might be inefficient, may change to set later on
-        voters.push(msg.sender);
+        // might be inefficient, may change to set later on
+
+        require(
+            voters[msg.sender].voterAddr != address(0),
+            "Already Registered"
+        );
+
+        voters[msg.sender] = Voter({voterAddr: msg.sender, verified: false});
+        allVoters.push(Voter({voterAddr: msg.sender, verified: false}));
+    }
+
+    function verifyVoter() external onlyOwner {
+        // check if the owner is the one calling
+        // make sure
+        Voter storage voter = voters[msg.sender];
+        voter.verified = true;
     }
 
     function vote(
@@ -296,5 +323,16 @@ contract Governance {
         string memory year
     ) public view returns (Election memory _election) {
         return elections[year][electionId];
+    }
+
+    function hasMinted(
+        string memory year,
+        uint256 _electionId
+    ) external view returns (bool) {
+        return minted[msg.sender][year][_electionId];
+    }
+
+    function isVerified() external view returns (bool) {
+        return voters[msg.sender].verified;
     }
 }
