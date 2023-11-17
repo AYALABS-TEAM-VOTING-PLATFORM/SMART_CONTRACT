@@ -37,7 +37,7 @@ contract Governance {
         uint256 startDate;
         uint256 endDate;
         address[] voters;
-        Candidate[] candidates;
+        uint256[] candidates;
         bool ongoing;
         address[] minters;
         uint256 ID;
@@ -139,6 +139,7 @@ contract Governance {
     ) public {
         // check if vote is over
         Election storage election = elections[year][electionId];
+        Candidate storage candidate = candidates[year][candidateId];
 
         // if the time has passed, the next person that tries to vote changes ongoing to false
         // Check if the election has ended. If so, mark it as not ongoing and revert the transaction.
@@ -157,7 +158,6 @@ contract Governance {
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), value);
 
         // make state change
-        Candidate storage candidate = election.candidates[candidateId];
         candidate.noOfVoters++;
         candidate.votersAddresses.push(msg.sender);
     }
@@ -200,12 +200,14 @@ contract Governance {
         uint256 _endDate
     ) public {
         // check if that candidate already exist
+        // Candidate[] memory candidate = new Candidate[](3);
+
         elections[year][_electionId] = Election({
             name: _name,
             startDate: _startDate,
             endDate: _endDate,
             voters: new address[](0),
-            candidates: new Candidate[](0),
+            candidates: new uint256[](0),
             ongoing: false,
             minters: new address[](0),
             ID: _electionId // Assuming the ID is the index in the array
@@ -216,7 +218,7 @@ contract Governance {
                 startDate: _startDate,
                 endDate: _endDate,
                 voters: new address[](0),
-                candidates: new Candidate[](0),
+                candidates: new uint256[](0),
                 ongoing: false,
                 minters: new address[](0),
                 ID: _electionId // Assuming the ID is the index in the array
@@ -234,23 +236,13 @@ contract Governance {
         Election storage election = elections[_year][_electionId];
 
         // Get the storage reference to the array of candidates for the specified election.
-        Candidate[] storage candidateStruct = election.candidates;
+        uint256[] storage candidateStruct = election.candidates;
 
         // Retrieve the candidate details from the global candidates mapping.
         Candidate storage candidate = candidates[_year][candidateId];
 
         // Add the candidate to the array of candidates for the specified election.
-        candidateStruct.push(
-            Candidate({
-                name: candidate.name,
-                imageURI: candidate.imageURI,
-                position: candidate.position,
-                about: candidate.about,
-                noOfVoters: 0,
-                votersAddresses: new address[](0),
-                ID: candidateId
-            })
-        );
+        candidateStruct.push(candidate.ID);
 
         // Emit an event to log the addition of the candidate to the election.
         emit CandidateAdded(_electionId, candidateId, _year);
@@ -303,6 +295,7 @@ contract Governance {
         return allCandidates;
     }
 
+    // get a particular candidate details
     function getCandidatesForAYear(
         uint256 candidateId,
         string memory year
@@ -318,6 +311,7 @@ contract Governance {
         return allElection;
     }
 
+    // get a particular election details
     function getElection(
         uint256 electionId,
         string memory year
