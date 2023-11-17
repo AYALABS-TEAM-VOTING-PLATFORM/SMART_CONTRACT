@@ -78,9 +78,42 @@ contract Governance {
     Election[] internal allElection;
 
     ///////// EVENTS /////////////////////////
-    event ElectionStatusChanged(string, uint256, uint256, bool);
-    event CandidateAdded(uint256, uint256, string);
+    event ElectionStatusChanged(
+        string indexed year,
+        uint256 indexed electionId,
+        uint256 indexed endDate,
+        bool status
+    );
+    event CandidateAdded(
+        uint256 indexed electionId,
+        uint256 indexed candidateId,
+        string indexed _year
+    );
+    event MintedToken(
+        string indexed year,
+        uint256 indexed electionId,
+        address indexed _tokenAddr
+    );
+    event AddVoter(address indexed sender);
+    event VerifiedVoter(address indexed sender);
+    event VotedSuccessfully(
+        string indexed year,
+        uint256 indexed electionId,
+        address tokenAddress,
+        uint32 value,
+        uint256 startDate,
+        uint256 endDate,
+        uint256 indexed candidateId
+    );
 
+    event CreatedElection(
+        string indexed year,
+        string indexed _name,
+        uint256 indexed _electionId,
+        uint256 _startDate,
+        uint256 _endDate
+    );
+    //////////// MODIFIERS ///////////////
     modifier onlyOwner() {
         require(msg.sender == i_owner, "You can not call the function");
         _;
@@ -106,6 +139,7 @@ contract Governance {
         // MINT FUNCTION
         // mint the user one token only
         IGovernanceToken(_tokenAddr).mint(year, _electionId, address(this));
+        emit MintedToken(year, _electionId, _tokenAddr);
     }
 
     function addVoter() public {
@@ -119,6 +153,8 @@ contract Governance {
 
         voters[msg.sender] = Voter({voterAddr: msg.sender, verified: false});
         allVoters.push(Voter({voterAddr: msg.sender, verified: false}));
+
+        emit AddVoter(msg.sender);
     }
 
     function verifyVoter() external onlyOwner {
@@ -126,6 +162,8 @@ contract Governance {
         // make sure
         Voter storage voter = voters[msg.sender];
         voter.verified = true;
+
+        emit VerifiedVoter(msg.sender);
     }
 
     function vote(
@@ -160,6 +198,16 @@ contract Governance {
         // make state change
         candidate.noOfVoters++;
         candidate.votersAddresses.push(msg.sender);
+
+        emit VotedSuccessfully(
+            year,
+            electionId,
+            tokenAddress,
+            value,
+            startDate,
+            endDate,
+            candidateId
+        );
     }
 
     function createCandidate(
@@ -224,6 +272,8 @@ contract Governance {
                 ID: _electionId // Assuming the ID is the index in the array
             })
         );
+
+        emit CreatedElection(year, _name, _electionId, _startDate, _endDate);
     }
 
     // checked  👍
