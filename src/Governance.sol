@@ -153,7 +153,7 @@ contract Governance {
         emit AddVoter(msg.sender);
     }
 
-    function verifyVoter(address _addressToBeVerified) external {
+    function verifyVoter(address _addressToBeVerified) external onlyOwner  {
         // check if the owner is the one calling
         // make sure
         Voter storage voter = voters[_addressToBeVerified];
@@ -214,7 +214,7 @@ contract Governance {
         string memory imageURI,
         string memory position,
         string memory about
-    ) public {
+    ) public onlyOwner {
         candidates[year][candidateId] = Candidate({
             name: name,
             imageURI: imageURI,
@@ -243,7 +243,7 @@ contract Governance {
         uint256 _electionId,
         uint256 _startDate,
         uint256 _endDate
-    ) public {
+    ) public onlyOwner {
         // check if that candidate already exist
         // Candidate[] memory candidate = new Candidate[](3);
 
@@ -278,7 +278,7 @@ contract Governance {
         uint256 _electionId,
         uint256 candidateId,
         string memory _year
-    ) public {
+    ) public onlyOwner {
         // Get the reference to the election by using the election ID and year.
         Election storage election = elections[_year][_electionId];
 
@@ -302,7 +302,7 @@ contract Governance {
         uint256 electionId,
         uint256 endDate,
         bool status
-    ) external {
+    ) external onlyOwner {
         // Check if the election exists
         require(
             elections[year][electionId].ID == electionId,
@@ -365,8 +365,12 @@ contract Governance {
     ) public view returns (Election memory _election) {
         return elections[year][electionId];
     }
-
-    function getAllVoters() public view returns (Voter[] memory _allVoters) {
+    
+    function getAllVoters()
+        public
+        view
+        returns (Voter[] memory _allVoters)
+    {
         return allVoters;
     }
 
@@ -376,6 +380,7 @@ contract Governance {
     ) public view returns (Voter memory _voter) {
         return voters[voterAddress];
     }
+    
 
     function hasMinted(
         string memory year,
