@@ -131,10 +131,6 @@ contract Governance {
         // when a user call this function (DO THIS)
         // check if the user has minted for the election he is trying to mint for
         // mint the user the token
-        require(
-            !minted[msg.sender][year][_electionId],
-            "Already minted for this election"
-        ); // already minted try again for another election
 
         // MINT FUNCTION
         // mint the user one token only
@@ -147,7 +143,7 @@ contract Governance {
         // might be inefficient, may change to set later on
 
         require(
-            voters[msg.sender].voterAddr != address(0),
+            voters[msg.sender].voterAddr == address(0),
             "Already Registered"
         );
 
@@ -157,10 +153,10 @@ contract Governance {
         emit AddVoter(msg.sender);
     }
 
-    function verifyVoter() external onlyOwner {
+    function verifyVoter(address _addressToBeVerified) external {
         // check if the owner is the one calling
         // make sure
-        Voter storage voter = voters[msg.sender];
+        Voter storage voter = voters[_addressToBeVerified];
         voter.verified = true;
 
         emit VerifiedVoter(msg.sender);
@@ -181,7 +177,7 @@ contract Governance {
 
         // if the time has passed, the next person that tries to vote changes ongoing to false
         // Check if the election has ended. If so, mark it as not ongoing and revert the transaction.
-        require(!election.ongoing, "Election Ender");
+        require(!election.ongoing, "Election Ended");
 
         if (block.timestamp > endDate) {
             election.ongoing = false;
@@ -198,6 +194,7 @@ contract Governance {
         // make state change
         candidate.noOfVoters++;
         candidate.votersAddresses.push(msg.sender);
+        election.voters.push(msg.sender);
 
         emit VotedSuccessfully(
             year,
@@ -281,7 +278,7 @@ contract Governance {
         uint256 _electionId,
         uint256 candidateId,
         string memory _year
-    ) private {
+    ) public {
         // Get the reference to the election by using the election ID and year.
         Election storage election = elections[_year][_electionId];
 
@@ -369,6 +366,17 @@ contract Governance {
         return elections[year][electionId];
     }
 
+    function getAllVoters() public view returns (Voter[] memory _allVoters) {
+        return allVoters;
+    }
+
+    // get a particular voter details
+    function getVoter(
+        address voterAddress
+    ) public view returns (Voter memory _voter) {
+        return voters[voterAddress];
+    }
+
     function hasMinted(
         string memory year,
         uint256 _electionId
@@ -376,7 +384,7 @@ contract Governance {
         return minted[msg.sender][year][_electionId];
     }
 
-    function isVerified() external view returns (bool) {
-        return voters[msg.sender].verified;
+    function isVerified(address _walletAddress) external view returns (bool) {
+        return voters[_walletAddress].verified;
     }
 }

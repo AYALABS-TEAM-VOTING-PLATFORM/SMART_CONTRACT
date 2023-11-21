@@ -42,14 +42,18 @@ contract GovernanceToken is ERC20 {
             year,
             _electionId
         );
-        bool isVerified = Governance(governanceAddr).isVerified();
+        bool isVerified = Governance(governanceAddr).isVerified(msg.sender);
 
-        // CHECKS
-        // 1- checking if a voter has minted the token before
-        // 2- checking if a voter has verified is account
-        require(!hasMinted, "You Already minted for this elections");
-        require(isVerified, "You Are not verified to mint a token");
+        // // CHECKS
+        // // 1- checking if a voter has minted the token before
+        // // 2- checking if a voter has verified is account
+        require(hasMinted == false, "You Already minted for this elections");
+        require(isVerified == true, "You Are not verified to mint a token");
 
-        IERC20(address(this)).transferFrom(address(this), msg.sender, 1);
+        IERC20(address(this)).transfer(msg.sender, 1);
+    }
+
+    function balanceOf() public view returns (uint256) {
+        return IERC20(address(this)).balanceOf(address(this));
     }
 }

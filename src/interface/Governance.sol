@@ -7,5 +7,5 @@ interface Governance {
         uint256 _electionId
     ) external view returns (bool);
 
-    function isVerified() external view returns (bool);
+    function isVerified(address _walletAddress) external view returns (bool);
 }
