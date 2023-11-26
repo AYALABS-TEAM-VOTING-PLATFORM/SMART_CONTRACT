@@ -41,6 +41,8 @@ contract Governance {
         bool ongoing;
         address[] minters;
         uint256 ID;
+        string about;
+        string year;
     }
 
     struct Candidate {
@@ -51,6 +53,7 @@ contract Governance {
         uint256 noOfVoters;
         address[] votersAddresses; // people that has voted for this candidate
         uint256 ID;
+        string year;
     }
 
     struct Voter {
@@ -222,7 +225,8 @@ contract Governance {
             about: about,
             noOfVoters: 0, // people that has voted for this candidate
             votersAddresses: new address[](0),
-            ID: candidateId
+            ID: candidateId,
+            year: year
         });
         allCandidates.push(
             Candidate({
@@ -232,7 +236,8 @@ contract Governance {
                 about: about,
                 noOfVoters: 0, // people that has voted for this candidate
                 votersAddresses: new address[](0),
-                ID: candidateId
+                ID: candidateId,
+                year: year
             })
         );
     }
@@ -242,7 +247,8 @@ contract Governance {
         string memory _name,
         uint256 _electionId,
         uint256 _startDate,
-        uint256 _endDate
+        uint256 _endDate,
+        string memory about
     ) public onlyOwner {
         // check if that candidate already exist
         // Candidate[] memory candidate = new Candidate[](3);
@@ -255,7 +261,9 @@ contract Governance {
             candidates: new uint256[](0),
             ongoing: false,
             minters: new address[](0),
-            ID: _electionId // Assuming the ID is the index in the array
+            ID: _electionId, // Assuming the ID is the index in the array
+            about: about,
+            year: year
         });
         allElection.push(
             Election({
@@ -266,7 +274,9 @@ contract Governance {
                 candidates: new uint256[](0),
                 ongoing: false,
                 minters: new address[](0),
-                ID: _electionId // Assuming the ID is the index in the array
+                ID: _electionId, // Assuming the ID is the index in the array
+                about: about,
+                year: year
             })
         );
 
