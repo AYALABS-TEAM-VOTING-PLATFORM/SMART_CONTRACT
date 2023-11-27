@@ -346,10 +346,11 @@ contract Governance {
 
     function addMinterToElection(
         string memory year,
-        uint256 electionId
+        uint256 electionId,
+        address minter
     ) external {
         Election storage election = elections[year][electionId];
-        election.minters.push(msg.sender);
+        election.minters.push(minter);
     }
 
     ////////////// GETTERS FUNCTIONS (VIEW and PURE) ///////////////////////
