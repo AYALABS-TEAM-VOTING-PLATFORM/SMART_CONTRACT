@@ -36,7 +36,8 @@ contract GovernanceToken is ERC20 {
     function mint(
         string memory year,
         uint256 _electionId,
-        address governanceAddr
+        address governanceAddr,
+        address minter
     ) external {
         bool hasMinted = Governance(governanceAddr).hasMinted(
             year,
@@ -52,7 +53,11 @@ contract GovernanceToken is ERC20 {
 
         IERC20(address(this)).transfer(msg.sender, 1 * 10 ** 18);
         Governance(governanceAddr).changeHasMinted(year, _electionId);
-        Governance(governanceAddr).addMinterToElection(year, _electionId);
+        Governance(governanceAddr).addMinterToElection(
+            year,
+            _electionId,
+            minter
+        );
     }
 
     function balanceOf() public view returns (uint256) {

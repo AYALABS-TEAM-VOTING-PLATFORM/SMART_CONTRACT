@@ -8,4 +8,12 @@ interface Governance {
     ) external view returns (bool);
 
     function isVerified(address _walletAddress) external view returns (bool);
+
+    function changeHasMinted(string memory year, uint256 _electionId) external;
+
+    function addMinterToElection(
+        string memory year,
+        uint256 electionId,
+        address minter
+    ) external;
 }
