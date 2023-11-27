@@ -30,7 +30,7 @@ import {IERC20} from "./interface/IERC2o.sol";
 
 contract GovernanceToken is ERC20 {
     constructor() ERC20("Reward", "RWD") {
-        _mint(address(this), 1000);
+        _mint(address(this), 1000 * 10 ** 18);
     }
 
     function mint(
@@ -44,13 +44,15 @@ contract GovernanceToken is ERC20 {
         );
         bool isVerified = Governance(governanceAddr).isVerified(msg.sender);
 
-        // // CHECKS
-        // // 1- checking if a voter has minted the token before
-        // // 2- checking if a voter has verified is account
+        // CHECKS
+        // 1- checking if a voter has minted the token before
+        // 2- checking if a voter has verified is account
         require(hasMinted == false, "You Already minted for this elections");
         require(isVerified == true, "You Are not verified to mint a token");
 
-        IERC20(address(this)).transfer(msg.sender, 1);
+        IERC20(address(this)).transfer(msg.sender, 1 * 10 ** 18);
+        Governance(governanceAddr).changeHasMinted(year, _electionId);
+        Governance(governanceAddr).addMinterToElection(year, _electionId);
     }
 
     function balanceOf() public view returns (uint256) {

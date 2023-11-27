@@ -103,7 +103,7 @@ contract Governance {
         string indexed year,
         uint256 indexed electionId,
         address tokenAddress,
-        uint32 value,
+        uint256 value,
         uint256 startDate,
         uint256 endDate,
         uint256 indexed candidateId
@@ -156,7 +156,7 @@ contract Governance {
         emit AddVoter(msg.sender);
     }
 
-    function verifyVoter(address _addressToBeVerified) external onlyOwner  {
+    function verifyVoter(address _addressToBeVerified) external onlyOwner {
         // check if the owner is the one calling
         // make sure
         Voter storage voter = voters[_addressToBeVerified];
@@ -169,7 +169,7 @@ contract Governance {
         string memory year,
         uint256 electionId,
         address tokenAddress,
-        uint32 value,
+        uint256 value,
         uint256 startDate,
         uint256 endDate,
         uint256 candidateId
@@ -293,13 +293,10 @@ contract Governance {
         Election storage election = elections[_year][_electionId];
 
         // Get the storage reference to the array of candidates for the specified election.
-        uint256[] storage candidateStruct = election.candidates;
-
-        // Retrieve the candidate details from the global candidates mapping.
-        Candidate storage candidate = candidates[_year][candidateId];
+        uint256[] storage candidatesArr = election.candidates;
 
         // Add the candidate to the array of candidates for the specified election.
-        candidateStruct.push(candidate.ID);
+        candidatesArr.push(candidateId);
 
         // Emit an event to log the addition of the candidate to the election.
         emit CandidateAdded(_electionId, candidateId, _year);
@@ -343,6 +340,18 @@ contract Governance {
         emit ElectionStatusChanged(year, electionId, endDate, status);
     }
 
+    function changeHasMinted(string memory year, uint256 _electionId) external {
+        minted[msg.sender][year][_electionId] = true;
+    }
+
+    function addMinterToElection(
+        string memory year,
+        uint256 electionId
+    ) external {
+        Election storage election = elections[year][electionId];
+        election.minters.push(msg.sender);
+    }
+
     ////////////// GETTERS FUNCTIONS (VIEW and PURE) ///////////////////////
     function getAllCondidates()
         public
@@ -375,12 +384,8 @@ contract Governance {
     ) public view returns (Election memory _election) {
         return elections[year][electionId];
     }
-    
-    function getAllVoters()
-        public
-        view
-        returns (Voter[] memory _allVoters)
-    {
+
+    function getAllVoters() public view returns (Voter[] memory _allVoters) {
         return allVoters;
     }
 
@@ -390,7 +395,6 @@ contract Governance {
     ) public view returns (Voter memory _voter) {
         return voters[voterAddress];
     }
-    
 
     function hasMinted(
         string memory year,
