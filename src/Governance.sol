@@ -156,7 +156,7 @@ contract Governance {
         emit AddVoter(msg.sender);
     }
 
-    function verifyVoter(address _addressToBeVerified) external onlyOwner {
+    function verifyVoter(address _addressToBeVerified) external onlyOwner  {
         // check if the owner is the one calling
         // make sure
         Voter storage voter = voters[_addressToBeVerified];
@@ -340,16 +340,14 @@ contract Governance {
         emit ElectionStatusChanged(year, electionId, endDate, status);
     }
 
-    function changeHasMinted(string memory year, uint256 _electionId) external {
-        minted[msg.sender][year][_electionId] = true;
+    
+    function changeHasMinted( string memory year,
+        uint256 _electionId) external {
+         minted[msg.sender][year][_electionId] = true;
     }
 
-    function addMinterToElection(
-        string memory year,
-        uint256 electionId,
-        address minter
-    ) external {
-        Election storage election = elections[year][electionId];
+    function addMinterToElection(string memory year, uint256 electionId, address minter) external {
+        Election storage election =  elections[year][electionId];
         election.minters.push(minter);
     }
 
@@ -385,8 +383,12 @@ contract Governance {
     ) public view returns (Election memory _election) {
         return elections[year][electionId];
     }
-
-    function getAllVoters() public view returns (Voter[] memory _allVoters) {
+    
+    function getAllVoters()
+        public
+        view
+        returns (Voter[] memory _allVoters)
+    {
         return allVoters;
     }
 
@@ -396,6 +398,7 @@ contract Governance {
     ) public view returns (Voter memory _voter) {
         return voters[voterAddress];
     }
+    
 
     function hasMinted(
         string memory year,
