@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.18;
 
-interface Governance {
+import {IVoter} from "./IVoter.sol";
+
+interface Governance is IVoter {
     function hasMinted(
         string memory year,
         uint256 _electionId
@@ -16,4 +18,6 @@ interface Governance {
         uint256 electionId,
         address minter
     ) external;
+
+    function getAllVoters() external view returns (Voter[] memory _allVoters);
 }

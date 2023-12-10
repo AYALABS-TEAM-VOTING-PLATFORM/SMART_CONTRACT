@@ -34,7 +34,9 @@ contract GovernanceToken is ERC20, IVoter {
         _mint(address(this), 1000 * 10 ** 18);
     }
 
-    function mint(
+    mapping(address => uint) noOfTokens;
+
+    function addMinter(
         string memory year,
         uint256 _electionId,
         address governanceAddr,
@@ -52,7 +54,8 @@ contract GovernanceToken is ERC20, IVoter {
         require(hasMinted == false, "You Already minted for this elections");
         require(isVerified == true, "You Are not verified to mint a token");
 
-        IERC20(address(this)).transfer(msg.sender, 1 * 10 ** 18);
+        noOfTokens[msg.sender]++;
+
         Governance(governanceAddr).changeHasMinted(year, _electionId);
         Governance(governanceAddr).addMinterToElection(
             year,
@@ -61,7 +64,24 @@ contract GovernanceToken is ERC20, IVoter {
         );
     }
 
+    function mint(address governanceAddr) external {
+        Voter[] memory voters = Governance(governanceAddr).getAllVoters();
+
+        for (uint i = 0; i < voters.length; i++) {
+            uint _noOfTokens = noOfTokens[msg.sender];
+
+            IERC20(address(this)).transfer(
+                voters[i].voterAddr,
+                _noOfTokens * 10 ** 18
+            );
+        }
+    }
+
     function balanceOf() public view returns (uint256) {
         return IERC20(address(this)).balanceOf(address(this));
+    }
+
+    function getVoterNoTokens() public view returns (uint) {
+        return noOfTokens[msg.sender];
     }
 }

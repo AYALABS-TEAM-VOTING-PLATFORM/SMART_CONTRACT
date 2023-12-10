@@ -29,10 +29,10 @@ error VotingEndingTimeHasntReached();
 
 import {IERC20} from "./interface/IERC2o.sol";
 import {IGovernanceToken} from "./interface/IGovernanceToken.sol";
-import {IGovernanceToken} from "./interface/IGovernanceToken.sol";
+import {IGovernanceToken} from "./interface/IV.sol";
 import {IVoter} from "./interface/IVoter.sol";
 
-contract Governance is IVoter {
+contract Governance is Voter {
     //////////// STRUCT ///////////////
     struct Election {
         string name;
@@ -383,7 +383,7 @@ contract Governance is IVoter {
         return elections[year][electionId];
     }
 
-    function getAllVoters() external view returns (Voter[] memory _allVoters) {
+    function getAllVoters() public view returns (Voter[] memory _allVoters) {
         return allVoters;
     }
 
